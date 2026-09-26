@@ -5,6 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BAVIN Wholesale Catalogue - Lebanon</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        function renderCatalogue() {
+            let saved = localStorage.getItem("bavin_products");
+            let products = saved ? JSON.parse(saved) : [
+                { id: 1, name: "BAVIN BH-50", category: "Audio", price: "14.50", code: "BH-50", desc: "Wireless Stereo Headphone, Bluetooth 5.3", img: "" },
+                { id: 2, name: "BAVIN BH-39", category: "Audio", price: "18.00", code: "BH-39", desc: "Active Noise Reduction, Hi-Res Audio", img: "" },
+                { id: 3, name: "BAVIN PC1185", category: "Power Banks", price: "9.00", code: "PC1185", desc: "10000mAh Power Bank, 22.5W Fast Charging", img: "" }
+            ];
+
+            let audioGrid = document.getElementById("audio-grid");
+            let powerGrid = document.getElementById("power-grid");
+            
+            audioGrid.innerHTML = "";
+            powerGrid.innerHTML = "";
+
+            products.forEach(p => {
+                let cardHTML = `
+                    <div class="bg-white border rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs font-bold bg-slate-900 text-white px-2.5 py-1 rounded">${p.code}</span>
+                            <div class="h-40 bg-gray-100 rounded-lg my-4 flex items-center justify-center text-gray-400 text-sm overflow-hidden">
+                                ${p.img ? `<img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover">` : `<span>${p.name} Preview</span>`}
+                            </div>
+                            <h4 class="font-bold text-lg text-slate-900">${p.name}</h4>
+                            <p class="text-xs text-gray-500 mt-1">${p.desc}</p>
+                        </div>
+                        <div class="mt-4 pt-4 border-t flex justify-between items-center">
+                            <span class="text-xs text-gray-400 uppercase font-semibold">Wholesale Price</span>
+                            <span class="text-emerald-600 font-bold text-lg">$${p.price}</span>
+                        </div>
+                    </div>
+                `;
+
+                if (p.category === "Audio") {
+                    audioGrid.innerHTML += cardHTML;
+                } else {
+                    powerGrid.innerHTML += cardHTML;
+                }
+            });
+        }
+        window.onload = renderCatalogue;
+    </script>
 </head>
 <body class="bg-gray-50 text-slate-800">
     <header class="bg-slate-900 text-white py-6 px-8 shadow-md border-b-4 border-emerald-500">
@@ -31,76 +73,18 @@
             <h3 class="text-xl font-bold text-slate-900 border-b border-gray-200 pb-2 mb-6 flex items-center">
                 <span class="w-3 h-3 bg-emerald-500 rounded-full mr-2"></span> Audio & Wireless Headsets
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white border rounded-xl p-5 shadow-sm">
-                    <span class="text-xs font-bold bg-slate-900 text-white px-2.5 py-1 rounded">BH-50</span>
-                    <div class="h-40 bg-gray-100 rounded-lg my-4 flex items-center justify-center text-gray-400 text-sm">Wireless Stereo Headphone</div>
-                    <h4 class="font-bold text-lg">BAVIN BH-50</h4>
-                    <p class="text-xs text-gray-500 mt-1">Bluetooth 5.3, long battery life, comfortable cushions[cite: 5].</p>
-                    <div class="mt-4 pt-4 border-t flex justify-between items-center">
-                        <span class="text-xs text-gray-400 uppercase">Wholesale Price</span>
-                        <span class="text-emerald-600 font-bold text-lg">$14.50</span>
-                    </div>
-                </div>
-                <div class="bg-white border rounded-xl p-5 shadow-sm">
-                    <span class="text-xs font-bold bg-slate-900 text-white px-2.5 py-1 rounded">BH-39</span>
-                    <div class="h-40 bg-gray-100 rounded-lg my-4 flex items-center justify-center text-gray-400 text-sm">Active Noise Reduction</div>
-                    <h4 class="font-bold text-lg">BAVIN BH-39</h4>
-                    <p class="text-xs text-gray-500 mt-1">Wireless 5.3, Hi-Res Audio, 11-hour play duration[cite: 4].</p>
-                    <div class="mt-4 pt-4 border-t flex justify-between items-center">
-                        <span class="text-xs text-gray-400 uppercase">Wholesale Price</span>
-                        <span class="text-emerald-600 font-bold text-lg">$18.00</span>
-                    </div>
-                </div>
-                <div class="bg-white border rounded-xl p-5 shadow-sm">
-                    <span class="text-xs font-bold bg-slate-900 text-white px-2.5 py-1 rounded">BH-57</span>
-                    <div class="h-40 bg-gray-100 rounded-lg my-4 flex items-center justify-center text-gray-400 text-sm">Hi-Res Bluetooth Headset</div>
-                    <h4 class="font-bold text-lg">BAVIN BH-57</h4>
-                    <p class="text-xs text-gray-500 mt-1">Includes 3.5mm AUX input & Type-C fast charging[cite: 7].</p>
-                    <div class="mt-4 pt-4 border-t flex justify-between items-center">
-                        <span class="text-xs text-gray-400 uppercase">Wholesale Price</span>
-                        <span class="text-emerald-600 font-bold text-lg">$16.50</span>
-                    </div>
-                </div>
+            <div id="audio-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Injected dynamically -->
             </div>
         </section>
 
-        <!-- Power Banks & Chargers Section -->
+        <!-- Power Banks Section -->
         <section class="mb-12">
             <h3 class="text-xl font-bold text-slate-900 border-b border-gray-200 pb-2 mb-6 flex items-center">
                 <span class="w-3 h-3 bg-emerald-500 rounded-full mr-2"></span> Power Banks & Fast Chargers
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white border rounded-xl p-5 shadow-sm">
-                    <span class="text-xs font-bold bg-slate-900 text-white px-2.5 py-1 rounded">PC1185</span>
-                    <div class="h-40 bg-gray-100 rounded-lg my-4 flex items-center justify-center text-gray-400 text-sm">10000mAh Power Bank</div>
-                    <h4 class="font-bold text-lg">BAVIN PC1185</h4>
-                    <p class="text-xs text-gray-500 mt-1">22.5W USB Port Output, Fast Charging[cite: 12].</p>
-                    <div class="mt-4 pt-4 border-t flex justify-between items-center">
-                        <span class="text-xs text-gray-400 uppercase">Wholesale Price</span>
-                        <span class="text-emerald-600 font-bold text-lg">$9.00</span>
-                    </div>
-                </div>
-                <div class="bg-white border rounded-xl p-5 shadow-sm">
-                    <span class="text-xs font-bold bg-slate-900 text-white px-2.5 py-1 rounded">PC1191</span>
-                    <div class="h-40 bg-gray-100 rounded-lg my-4 flex items-center justify-center text-gray-400 text-sm">20000mAh Power Bank</div>
-                    <h4 class="font-bold text-lg">BAVIN PC1191</h4>
-                    <p class="text-xs text-gray-500 mt-1">20000mAh with 22.5W USB Port Output[cite: 11].</p>
-                    <div class="mt-4 pt-4 border-t flex justify-between items-center">
-                        <span class="text-xs text-gray-400 uppercase">Wholesale Price</span>
-                        <span class="text-emerald-600 font-bold text-lg">$14.00</span>
-                    </div>
-                </div>
-                <div class="bg-white border rounded-xl p-5 shadow-sm">
-                    <span class="text-xs font-bold bg-slate-900 text-white px-2.5 py-1 rounded">PC876</span>
-                    <div class="h-40 bg-gray-100 rounded-lg my-4 flex items-center justify-center text-gray-400 text-sm">Car Charger</div>
-                    <h4 class="font-bold text-lg">BAVIN PC876</h4>
-                    <p class="text-xs text-gray-500 mt-1">PD 20W & QC3.0 Fast Car Charger[cite: 10].</p>
-                    <div class="mt-4 pt-4 border-t flex justify-between items-center">
-                        <span class="text-xs text-gray-400 uppercase">Wholesale Price</span>
-                        <span class="text-emerald-600 font-bold text-lg">$4.50</span>
-                    </div>
-                </div>
+            <div id="power-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Injected dynamically -->
             </div>
         </section>
     </main>
