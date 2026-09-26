@@ -5,31 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BAVIN Catalogue - Management Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        function checkPassword() {
+            const pass = document.getElementById("admin-pass").value;
+            // Set your private admin password here
+            if (pass === "bavin2026") {
+                document.getElementById("login-screen").classList.add("hidden");
+                document.getElementById("admin-content").classList.remove("hidden");
+            } else {
+                alert("Incorrect Password!");
+            }
+        }
+    </script>
 </head>
 <body class="bg-slate-100 min-h-screen">
-    <nav class="bg-slate-900 text-white p-4 shadow-md flex justify-between items-center">
-        <h1 class="text-lg font-bold">BAVIN Admin Control Panel</h1>
-        <a href="index.html" class="text-xs bg-emerald-600 px-3 py-1.5 rounded font-semibold">View Live Catalogue</a>
-    </nav>
+    <!-- Password Login Screen -->
+    <div id="login-screen" class="max-w-md mx-auto mt-24 p-8 bg-white rounded-xl shadow-lg text-center">
+        <h2 class="text-2xl font-bold mb-4 text-slate-900">Admin Authentication</h2>
+        <p class="text-sm text-gray-500 mb-6">Enter your security key to access BAVIN inventory management.</p>
+        <input type="password" id="admin-pass" placeholder="Enter Admin Password" class="w-full p-3 border rounded mb-4 text-center">
+        <button onclick="checkPassword()" class="w-full bg-slate-900 text-white p-3 rounded font-bold hover:bg-slate-800">Unlock Panel</button>
+    </div>
 
-    <div class="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg">
-        <h2 class="text-xl font-bold mb-4 text-slate-800">Quick Price & Item Editor</h2>
-        <p class="text-sm text-gray-600 mb-6">Use this panel to manage items displayed on your domain network.</p>
-        
-        <div class="space-y-4">
-            <div class="p-4 border rounded-lg flex justify-between items-center bg-gray-50">
-                <div>
-                    <span class="font-bold text-slate-900">BH-50 Wireless Stereo Headphone</span>
-                    <p class="text-xs text-gray-500">Current Price: $14.50</p>
+    <!-- Protected Admin Dashboard (Hidden by default) -->
+    <div id="admin-content" class="hidden">
+        <nav class="bg-slate-900 text-white p-4 shadow-md flex justify-between items-center">
+            <h1 class="text-lg font-bold">BAVIN Admin Control Panel</h1>
+            <a href="index.html" class="text-xs bg-emerald-600 px-3 py-1.5 rounded font-semibold">View Live Catalogue</a>
+        </nav>
+
+        <div class="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-lg">
+            <h2 class="text-xl font-bold mb-4 text-slate-800">Complete Inventory Price & Item Editor</h2>
+            <p class="text-sm text-gray-600 mb-6">Manage all active stock items displayed on <span class="font-semibold text-emerald-600">akapp.store</span>.</p>
+            
+            <div class="space-y-4">
+                <!-- Audio Items -->
+                <div class="p-4 border rounded-lg flex justify-between items-center bg-gray-50">
+                    <div><span class="font-bold text-slate-900">BH-50 Wireless Stereo Headphone</span><p class="text-xs text-gray-500">Current Price: $14.50</p></div>
+                    <button onclick="alert('Ready to link dynamic update')" class="bg-slate-900 text-white px-4 py-2 rounded text-xs font-bold">Edit Price</button>
                 </div>
-                <button onclick="alert('Price update interface ready for deployment')" class="bg-slate-900 text-white px-4 py-2 rounded text-xs font-bold">Edit Price</button>
-            </div>
-            <div class="p-4 border rounded-lg flex justify-between items-center bg-gray-50">
-                <div>
-                    <span class="font-bold text-slate-900">BH-39 Active Noise Reduction</span>
-                    <p class="text-xs text-gray-500">Current Price: $18.00</p>
+                <div class="p-4 border rounded-lg flex justify-between items-center bg-gray-50">
+                    <div><span class="font-bold text-slate-900">BH-39 Active Noise Reduction</span><p class="text-xs text-gray-500">Current Price: $18.00</p></div>
+                    <button onclick="alert('Ready to link dynamic update')" class="bg-slate-900 text-white px-4 py-2 rounded text-xs font-bold">Edit Price</button>
                 </div>
-                <button onclick="alert('Price update interface ready for deployment')" class="bg-slate-900 text-white px-4 py-2 rounded text-xs font-bold">Edit Price</button>
+                <div class="p-4 border rounded-lg flex justify-between items-center bg-gray-50">
+                    <div><span class="font-bold text-slate-900">BH-57 Hi-Res Bluetooth Headset</span><p class="text-xs text-gray-500">Current Price: $16.50</p></div>
+                    <button onclick="alert('Ready to link dynamic update')" class="bg-slate-900 text-white px-4 py-2 rounded text-xs font-bold">Edit Price</button>
+                </div>
+                <!-- Power Banks & Chargers -->
+                <div class="p-4 border rounded-lg flex justify-between items-center bg-gray-50">
+                    <div><span class="font-bold text-slate-900">PC1185 10000mAh Power Bank</span><p class="text-xs text-gray-500">Current Price: $9.00</p></div>
+                    <button onclick="alert('Ready to link dynamic update')" class="bg-slate-900 text-white px-4 py-2 rounded text-xs font-bold">Edit Price</button>
+                </div>
+                <div class="p-4 border rounded-lg flex justify-between items-center bg-gray-50">
+                    <div><span class="font-bold text-slate-900">PC1191 20000mAh Power Bank</span><p class="text-xs text-gray-500">Current Price: $14.00</p></div>
+                    <button onclick="alert('Ready to link dynamic update')" class="bg-slate-900 text-white px-4 py-2 rounded text-xs font-bold">Edit Price</button>
+                </div>
+                <div class="p-4 border rounded-lg flex justify-between items-center bg-gray-50">
+                    <div><span class="font-bold text-slate-900">PC876 Fast Car Charger</span><p class="text-xs text-gray-500">Current Price: $4.50</p></div>
+                    <button onclick="alert('Ready to link dynamic update')" class="bg-slate-900 text-white px-4 py-2 rounded text-xs font-bold">Edit Price</button>
+                </div>
             </div>
         </div>
     </div>
