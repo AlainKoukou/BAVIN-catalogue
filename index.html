@@ -9,9 +9,7 @@
         function renderCatalogue() {
             let saved = localStorage.getItem("bavin_products");
             let products = saved ? JSON.parse(saved) : [
-                { id: 1, name: "BAVIN BH-50", category: "Audio", price: "14.50", code: "BH-50", desc: "Wireless Stereo Headphone, Bluetooth 5.3", img: "" },
-                { id: 2, name: "BAVIN BH-39", category: "Audio", price: "18.00", code: "BH-39", desc: "Active Noise Reduction, Hi-Res Audio", img: "" },
-                { id: 3, name: "BAVIN PC1185", category: "Power Banks", price: "9.00", code: "PC1185", desc: "10000mAh Power Bank, 22.5W Fast Charging", img: "" }
+                { id: 1, name: "BAVIN BH-50", category: "Audio", price: "15.00", code: "BH-50", desc: "Wireless Stereo Headphone, Bluetooth 5.3", img: "./bh50.jpg" }
             ];
 
             let audioGrid = document.getElementById("audio-grid");
@@ -25,8 +23,9 @@
                     <div class="bg-white border rounded-xl p-5 shadow-sm flex flex-col justify-between">
                         <div>
                             <span class="text-xs font-bold bg-slate-900 text-white px-2.5 py-1 rounded">${p.code}</span>
-                            <div class="h-40 bg-gray-100 rounded-lg my-4 flex items-center justify-center text-gray-400 text-sm overflow-hidden">
-                                ${p.img ? `<img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover">` : `<span>${p.name} Preview</span>`}
+                            <div class="h-40 bg-gray-100 rounded-lg my-4 flex items-center justify-center text-gray-400 text-sm overflow-hidden cursor-pointer relative group" onclick="openModal('${p.img}', '${p.name}')">
+                                ${p.img ? `<img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover transition transform group-hover:scale-105">` : `<span>${p.name} Preview</span>`}
+                                <div class="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold uppercase tracking-wider">Click to Zoom</div>
                             </div>
                             <h4 class="font-bold text-lg text-slate-900">${p.name}</h4>
                             <p class="text-xs text-gray-500 mt-1">${p.desc}</p>
@@ -45,6 +44,18 @@
                 }
             });
         }
+
+        function openModal(imgSrc, title) {
+            if (!imgSrc) return;
+            document.getElementById("modal-img").src = imgSrc;
+            document.getElementById("modal-title").innerText = title;
+            document.getElementById("image-modal").classList.remove("hidden");
+        }
+
+        function closeModal() {
+            document.getElementById("image-modal").classList.add("hidden");
+        }
+
         window.onload = renderCatalogue;
     </script>
 </head>
@@ -88,5 +99,18 @@
             </div>
         </section>
     </main>
+
+    <!-- Full-Screen Image Lightbox Modal -->
+    <div id="image-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4" onclick="closeModal()">
+        <div class="bg-white rounded-xl max-w-2xl w-full p-4 relative shadow-2xl" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-3 border-b pb-2">
+                <h3 id="modal-title" class="font-bold text-slate-900 text-lg">Product Preview</h3>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-black font-bold text-xl px-2">&times;</button>
+            </div>
+            <div class="flex justify-center bg-gray-100 rounded-lg overflow-hidden max-h-[75vh]">
+                <img id="modal-img" src="" alt="Zoomed Product" class="object-contain max-h-[70vh] w-full">
+            </div>
+        </div>
+    </div>
 </body>
 </html>
