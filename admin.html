@@ -22,11 +22,8 @@
             if (saved) {
                 return JSON.parse(saved);
             }
-            // Default initial catalog if empty
             return [
-                { id: 1, name: "BAVIN BH-50", category: "Audio", price: "14.50", code: "BH-50", desc: "Wireless Stereo Headphone, Bluetooth 5.3", img: "" },
-                { id: 2, name: "BAVIN BH-39", category: "Audio", price: "18.00", code: "BH-39", desc: "Active Noise Reduction, Hi-Res Audio", img: "" },
-                { id: 3, name: "BAVIN PC1185", category: "Power Banks", price: "9.00", code: "PC1185", desc: "10000mAh Power Bank, 22.5W Fast Charging", img: "" }
+                { id: 1, name: "BAVIN BH-50", category: "Audio", price: "15.00", code: "BH-50", desc: "Wireless Stereo Headphone, Bluetooth 5.3", img: "./bh50.jpg" }
             ];
         }
 
@@ -37,17 +34,42 @@
 
             products.forEach((p, index) => {
                 container.innerHTML += `
-                    <div class="p-4 border rounded-lg flex flex-col md:flex-row justify-between items-center bg-gray-50 gap-4">
-                        <div class="w-full md:w-1/2">
-                            <span class="text-xs font-bold bg-slate-900 text-white px-2 py-0.5 rounded">${p.code}</span>
-                            <h4 class="font-bold text-slate-900 mt-1">${p.name}</h4>
-                            <p class="text-xs text-gray-500">${p.desc}</p>
-                            <p class="text-xs font-semibold text-emerald-600 mt-1">Price: $${p.price}</p>
+                    <div class="p-5 border rounded-lg bg-gray-50 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold bg-slate-900 text-white px-2 py-0.5 rounded">Item #${index + 1}</span>
+                            <button onclick="deleteProduct(${index})" class="bg-red-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-red-700">Delete Item</button>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <input type="text" id="price-${index}" value="${p.price}" class="w-20 p-1 border rounded text-sm text-center">
-                            <button onclick="updatePrice(${index})" class="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-blue-700">Update</button>
-                            <button onclick="deleteProduct(${index})" class="bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-red-700">Delete</button>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Product Name</label>
+                                <input type="text" id="name-${index}" value="${p.name}" class="w-full p-2 border rounded text-sm bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Model Code</label>
+                                <input type="text" id="code-${index}" value="${p.code}" class="w-full p-2 border rounded text-sm bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Category</label>
+                                <select id="cat-${index}" class="w-full p-2 border rounded text-sm bg-white">
+                                    <option value="Audio" ${p.category === 'Audio' ? 'selected' : ''}>Audio & Wireless Headsets</option>
+                                    <option value="Power Banks" ${p.category === 'Power Banks' ? 'selected' : ''}>Power Banks & Chargers</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Wholesale Price ($)</label>
+                                <input type="text" id="price-${index}" value="${p.price}" class="w-full p-2 border rounded text-sm bg-white">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Description</label>
+                                <input type="text" id="desc-${index}" value="${p.desc}" class="w-full p-2 border rounded text-sm bg-white">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Image Path / URL (e.g., ./bh50.jpg)</label>
+                                <input type="text" id="img-${index}" value="${p.img || ''}" class="w-full p-2 border rounded text-sm bg-white">
+                            </div>
+                        </div>
+                        <div class="text-right pt-2">
+                            <button onclick="updateProduct(${index})" class="bg-blue-600 text-white px-4 py-2 rounded text-xs font-bold hover:bg-blue-700">Save Changes</button>
                         </div>
                     </div>
                 `;
@@ -73,16 +95,21 @@
             
             document.getElementById("add-product-form").reset();
             loadAdminProducts();
-            alert("Product added successfully! It is now live on the customer catalogue.");
+            alert("Product added successfully!");
         }
 
-        function updatePrice(index) {
+        function updateProduct(index) {
             let products = getProducts();
-            let newPrice = document.getElementById(`price-${index}`).value;
-            products[index].price = newPrice;
+            products[index].name = document.getElementById(`name-${index}`).value;
+            products[index].code = document.getElementById(`code-${index}`).value;
+            products[index].category = document.getElementById(`cat-${index}`).value;
+            products[index].price = document.getElementById(`price-${index}`).value;
+            products[index].desc = document.getElementById(`desc-${index}`).value;
+            products[index].img = document.getElementById(`img-${index}`).value;
+
             localStorage.setItem("bavin_products", JSON.stringify(products));
             loadAdminProducts();
-            alert("Price updated successfully!");
+            alert("Product updated successfully! Changes are now live on the catalogue.");
         }
 
         function deleteProduct(index) {
@@ -113,23 +140,22 @@
 
         <div class="max-w-4xl mx-auto mt-8 p-6 bg-white rounded-xl shadow-lg">
             <h2 class="text-xl font-bold mb-4 text-slate-800">Add New BAVIN Product</h2>
-            <form id="add-product-form" onsubmit="addProduct(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 pb-8 border-b">
-                <input type="text" id="new-name" placeholder="Product Name (e.g., BAVIN BH-57)" required class="p-2.5 border rounded text-sm">
-                <input type="text" id="new-code" placeholder="Model Code (e.g., BH-57)" required class="p-2.5 border rounded text-sm">
+            <form id="add-product-form" onsubmit="addProduct(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 pb-8 border-b">
+                <input type="text" id="new-name" placeholder="Product Name (e.g., BAVIN BH-50)" required class="p-2.5 border rounded text-sm">
+                <input type="text" id="new-code" placeholder="Model Code (e.g., BH-50)" required class="p-2.5 border rounded text-sm">
                 <select id="new-category" class="p-2.5 border rounded text-sm">
                     <option value="Audio">Audio & Wireless Headsets</option>
                     <option value="Power Banks">Power Banks & Chargers</option>
-                    <option value="Peripherals">Cables & Peripherals</option>
                 </select>
                 <input type="text" id="new-price" placeholder="Wholesale Price (e.g., 15.00)" required class="p-2.5 border rounded text-sm">
                 <input type="text" id="new-desc" placeholder="Short description features" required class="p-2.5 border rounded text-sm md:col-span-2">
-                <input type="text" id="new-img" placeholder="Image URL (optional direct link)" class="p-2.5 border rounded text-sm md:col-span-2">
+                <input type="text" id="new-img" placeholder="Image Path (e.g., ./bh50.jpg)" class="p-2.5 border rounded text-sm md:col-span-2">
                 <button type="submit" class="md:col-span-2 bg-emerald-600 text-white p-3 rounded font-bold text-sm hover:bg-emerald-700">Add Product to Catalogue</button>
             </form>
 
-            <h2 class="text-xl font-bold mb-4 text-slate-800">Manage Existing Inventory</h2>
-            <div id="admin-product-list" class="space-y-4">
-                <!-- Dynamically loaded items appear here -->
+            <h2 class="text-xl font-bold mb-4 text-slate-800">Manage & Edit Existing Inventory</h2>
+            <div id="admin-product-list" class="space-y-6">
+                <!-- Dynamically loaded editable items appear here -->
             </div>
         </div>
     </div>
