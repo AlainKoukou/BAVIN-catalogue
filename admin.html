@@ -11,10 +11,19 @@
             if (pass === "bavin2026") {
                 document.getElementById("login-screen").classList.add("hidden");
                 document.getElementById("admin-content").classList.remove("hidden");
+                loadCategories();
                 loadAdminProducts();
             } else {
                 alert("Incorrect Password!");
             }
+        }
+
+        function getCategories() {
+            let saved = localStorage.getItem("bavin_categories");
+            if (saved) {
+                return JSON.parse(saved);
+            }
+            return ["Audio & Wireless Headsets", "Power Banks & Chargers"];
         }
 
         function getProducts() {
@@ -23,16 +32,104 @@
                 return JSON.parse(saved);
             }
             return [
-                { id: 1, name: "BAVIN BH-50", category: "Audio", price: "15.00", code: "BH-50", desc: "Wireless Stereo Headphone, Bluetooth 5.3", img: "./bh50.jpg" }
+                { id: 1, name: "BAVIN BH-50", category: "Audio & Wireless Headsets", price: "15.00", code: "BH-50", desc: "Wireless Stereo Headphone, Bluetooth 5.3", img: "" }
             ];
+        }
+
+        function loadCategories() {
+            let categories = getCategories();
+            
+            // Populate Category Manager List
+            let catList = document.getElementById("category-management-list");
+            catList.innerHTML = "";
+            categories.forEach((cat, index) => {
+                catList.innerHTML += `
+                    <div class="flex justify-between items-center bg-white p-2.5 border rounded shadow-sm">
+                        <span class="text-sm font-semibold text-slate-700">${cat}</span>
+                        <button onclick="deleteCategory(${index})" class="text-xs bg-red-100 text-red-600 px-2.5 py-1 rounded font-bold hover:bg-red-200">Delete Section</button>
+                    </div>
+                `;
+            });
+
+            // Populate Dropdowns in Add/Edit forms
+            updateCategoryDropdowns();
+        }
+
+        function updateCategoryDropdowns() {
+            let categories = getCategories();
+            let newCatSelect = document.getElementById("new-category");
+            if (newCatSelect) {
+                newCatSelect.innerHTML = "";
+                categories.forEach(cat => {
+                    newCatSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+                });
+            }
+
+            let products = getProducts();
+            products.forEach((p, index) => {
+                let editSelect = document.getElementById(`cat-${index}`);
+                if (editSelect) {
+                    editSelect.innerHTML = "";
+                    categories.forEach(cat => {
+                        let selected = (p.category === cat) ? 'selected' : '';
+                        editSelect.innerHTML += `<option value="${cat}" ${selected}>${cat}</option>`;
+                    });
+                }
+            });
+        }
+
+        function addCategory(event) {
+            event.preventDefault();
+            let input = document.getElementById("new-category-name");
+            let newCat = input.value.trim();
+            if (!newCat) return;
+
+            let categories = getCategories();
+            if (categories.includes(newCat)) {
+                alert("This category already exists!");
+                return;
+            }
+
+            categories.push(newCat);
+            localStorage.setItem("bavin_categories", JSON.stringify(categories));
+            input.value = "";
+            loadCategories();
+            loadAdminProducts();
+        }
+
+        function deleteCategory(index) {
+            let categories = getCategories();
+            let catToDelete = categories[index];
+
+            // Check if any product uses this category
+            let products = getProducts();
+            let inUse = products.some(p => p.category === catToDelete);
+            if (inUse) {
+                alert("Cannot delete this section because products are currently assigned to it. Please reassign or delete those products first.");
+                return;
+            }
+
+            if (confirm(`Are you sure you want to delete the section "${catToDelete}"?`)) {
+                categories.splice(index, 1);
+                localStorage.setItem("bavin_categories", JSON.stringify(categories));
+                loadCategories();
+                loadAdminProducts();
+            }
         }
 
         function loadAdminProducts() {
             let products = getProducts();
+            let categories = getCategories();
             let container = document.getElementById("admin-product-list");
             container.innerHTML = "";
 
             products.forEach((p, index) => {
+                let categoryOptions = "";
+                categories.forEach(cat => {
+                    let selected = (p.category === cat) ? 'selected' : '';
+                    categoryOptions += `<option value="${cat}" ${selected}>${cat}</option>`;
+                });
+
                 container.innerHTML += `
                     <div class="p-5 border rounded-lg bg-gray-50 space-y-3">
                         <div class="flex justify-between items-center">
@@ -49,10 +146,9 @@
                                 <input type="text" id="code-${index}" value="${p.code}" class="w-full p-2 border rounded text-sm bg-white">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">Category</label>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Category / Section</label>
                                 <select id="cat-${index}" class="w-full p-2 border rounded text-sm bg-white">
-                                    <option value="Audio" ${p.category === 'Audio' ? 'selected' : ''}>Audio & Wireless Headsets</option>
-                                    <option value="Power Banks" ${p.category === 'Power Banks' ? 'selected' : ''}>Power Banks & Chargers</option>
+                                    ${categoryOptions}
                                 </select>
                             </div>
                             <div>
@@ -64,7 +160,7 @@
                                 <input type="text" id="desc-${index}" value="${p.desc}" class="w-full p-2 border rounded text-sm bg-white">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">Image Path / URL (e.g., ./bh50.jpg)</label>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Cloudinary Image URL</label>
                                 <input type="text" id="img-${index}" value="${p.img || ''}" class="w-full p-2 border rounded text-sm bg-white">
                             </div>
                         </div>
@@ -109,7 +205,7 @@
 
             localStorage.setItem("bavin_products", JSON.stringify(products));
             loadAdminProducts();
-            alert("Product updated successfully! Changes are now live on the catalogue.");
+            alert("Product updated successfully!");
         }
 
         function deleteProduct(index) {
@@ -138,25 +234,44 @@
             <a href="index.html" class="text-xs bg-emerald-600 px-3 py-1.5 rounded font-semibold">View Live Catalogue</a>
         </nav>
 
-        <div class="max-w-4xl mx-auto mt-8 p-6 bg-white rounded-xl shadow-lg">
-            <h2 class="text-xl font-bold mb-4 text-slate-800">Add New BAVIN Product</h2>
-            <form id="add-product-form" onsubmit="addProduct(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 pb-8 border-b">
-                <input type="text" id="new-name" placeholder="Product Name (e.g., BAVIN BH-50)" required class="p-2.5 border rounded text-sm">
-                <input type="text" id="new-code" placeholder="Model Code (e.g., BH-50)" required class="p-2.5 border rounded text-sm">
-                <select id="new-category" class="p-2.5 border rounded text-sm">
-                    <option value="Audio">Audio & Wireless Headsets</option>
-                    <option value="Power Banks">Power Banks & Chargers</option>
-                </select>
-                <input type="text" id="new-price" placeholder="Wholesale Price (e.g., 15.00)" required class="p-2.5 border rounded text-sm">
-                <input type="text" id="new-desc" placeholder="Short description features" required class="p-2.5 border rounded text-sm md:col-span-2">
-                <input type="text" id="new-img" placeholder="Image Path (e.g., ./bh50.jpg)" class="p-2.5 border rounded text-sm md:col-span-2">
-                <button type="submit" class="md:col-span-2 bg-emerald-600 text-white p-3 rounded font-bold text-sm hover:bg-emerald-700">Add Product to Catalogue</button>
-            </form>
-
-            <h2 class="text-xl font-bold mb-4 text-slate-800">Manage & Edit Existing Inventory</h2>
-            <div id="admin-product-list" class="space-y-6">
-                <!-- Dynamically loaded editable items appear here -->
+        <div class="max-w-4xl mx-auto mt-8 p-6 bg-white rounded-xl shadow-lg space-y-8">
+            
+            <!-- Category Management Section -->
+            <div class="p-5 border rounded-lg bg-slate-50">
+                <h2 class="text-lg font-bold mb-3 text-slate-800">Manage Catalogue Sections / Categories</h2>
+                <form onsubmit="addCategory(event)" class="flex gap-2 mb-4">
+                    <input type="text" id="new-category-name" placeholder="New Section Name (e.g., Car Mounts)" required class="flex-1 p-2.5 border rounded text-sm bg-white">
+                    <button type="submit" class="bg-slate-900 text-white px-4 py-2.5 rounded font-bold text-sm hover:bg-slate-800">Add Section</button>
+                </form>
+                <div id="category-management-list" class="space-y-2">
+                    <!-- Dynamic categories list -->
+                </div>
             </div>
+
+            <!-- Add Product Section -->
+            <div>
+                <h2 class="text-xl font-bold mb-4 text-slate-800">Add New BAVIN Product</h2>
+                <form id="add-product-form" onsubmit="addProduct(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6 border-b">
+                    <input type="text" id="new-name" placeholder="Product Name (e.g., BAVIN BH-50)" required class="p-2.5 border rounded text-sm">
+                    <input type="text" id="new-code" placeholder="Model Code (e.g., BH-50)" required class="p-2.5 border rounded text-sm">
+                    <select id="new-category" class="p-2.5 border rounded text-sm bg-white">
+                        <!-- Dynamic categories -->
+                    </select>
+                    <input type="text" id="new-price" placeholder="Wholesale Price (e.g., 15.00)" required class="p-2.5 border rounded text-sm">
+                    <input type="text" id="new-desc" placeholder="Short description features" required class="p-2.5 border rounded text-sm md:col-span-2">
+                    <input type="text" id="new-img" placeholder="Cloudinary Image URL" class="p-2.5 border rounded text-sm md:col-span-2">
+                    <button type="submit" class="md:col-span-2 bg-emerald-600 text-white p-3 rounded font-bold text-sm hover:bg-emerald-700">Add Product to Catalogue</button>
+                </form>
+            </div>
+
+            <!-- Edit Inventory Section -->
+            <div>
+                <h2 class="text-xl font-bold mb-4 text-slate-800">Manage & Edit Existing Inventory</h2>
+                <div id="admin-product-list" class="space-y-6">
+                    <!-- Dynamically loaded items -->
+                </div>
+            </div>
+
         </div>
     </div>
 </body>
