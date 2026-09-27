@@ -22,17 +22,17 @@
     <script>
         const SUPABASE_URL = 'https://purnvsxcqfnyrktgemy.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_U2dD3xKCALLKk-rC3-fRxg_J3V6p6ZV';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let allProducts = [];
 
         async function initCatalogue() {
-            let { data: catData, error: catError } = await supabase.from('categories').select('name');
+            let { data: catData, error: catError } = await supabaseClient.from('categories').select('name');
             let categories = (!catError && catData && catData.length > 0) 
                 ? catData.map(c => c.name) 
                 : ["Audio & Wireless Headsets", "Power Banks & Chargers"];
 
-            let { data: prodData, error: prodError } = await supabase.from('products').select('*');
+            let { data: prodData, error: prodError } = await supabaseClient.from('products').select('*');
             allProducts = (!prodError && prodData) ? prodData : [];
 
             renderCategories(categories, allProducts);
@@ -94,7 +94,7 @@
         }
 
         async function initFilteredCategories(filteredProducts) {
-            let { data: catData } = await supabase.from('categories').select('name');
+            let { data: catData } = await supabaseClient.from('categories').select('name');
             let categories = catData ? catData.map(c => c.name) : [];
             renderCategories(categories, filteredProducts);
         }
