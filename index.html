@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BAVIN Wholesale Catalogue - Lebanon</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .no-select {
             user-select: none;
@@ -12,24 +13,27 @@
             -moz-user-select: none;
             -ms-user-select: none;
         }
-        /* Official BAVIN Persian Green Theme (#84cc16) */
         .bavin-green { color: #84cc16; }
         .bavin-bg { background-color: #84cc16; }
         .bavin-border { border-color: #84cc16; }
-        .bavin-hover:hover { color: #009672; }
-        .bavin-ring:focus { outline: none; box-shadow: 0 0 0 2px rgba(0, 180, 136, 0.4); border-color: #84cc16; }
+        .bavin-hover:hover { color: #65a30d; }
+        .bavin-ring:focus { outline: none; box-shadow: 0 0 0 2px rgba(132, 204, 22, 0.4); border-color: #84cc16; }
     </style>
     <script>
+        const SUPABASE_URL = 'https://purnvsxcqfnyrktgemy.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_U2dD3xKCALLKk-rC3-fRxg_J3V6p6ZV';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         let allProducts = [];
 
-        function initCatalogue() {
-            let savedCategories = localStorage.getItem("bavin_categories");
-            let categories = savedCategories ? JSON.parse(savedCategories) : ["Audio & Wireless Headsets", "Power Banks & Chargers"];
+        async function initCatalogue() {
+            let { data: catData, error: catError } = await supabase.from('categories').select('name');
+            let categories = (!catError && catData && catData.length > 0) 
+                ? catData.map(c => c.name) 
+                : ["Audio & Wireless Headsets", "Power Banks & Chargers"];
 
-            let savedProducts = localStorage.getItem("bavin_products");
-            allProducts = savedProducts ? JSON.parse(savedProducts) : [
-                { id: 1, name: "BAVIN BH-50", category: "Audio & Wireless Headsets", price: "15.00", code: "BH-50", desc: "Wireless Stereo Headphone, Bluetooth 5.3", img: "" }
-            ];
+            let { data: prodData, error: prodError } = await supabase.from('products').select('*');
+            allProducts = (!prodError && prodData) ? prodData : [];
 
             renderCategories(categories, allProducts);
         }
@@ -86,9 +90,13 @@
                 p.code.toLowerCase().includes(query) || 
                 p.desc.toLowerCase().includes(query)
             );
-            let savedCategories = localStorage.getItem("bavin_categories");
-            let categories = savedCategories ? JSON.parse(savedCategories) : ["Audio & Wireless Headsets", "Power Banks & Chargers"];
-            renderCategories(categories, filtered);
+            initFilteredCategories(filtered);
+        }
+
+        async function initFilteredCategories(filteredProducts) {
+            let { data: catData } = await supabase.from('categories').select('name');
+            let categories = catData ? catData.map(c => c.name) : [];
+            renderCategories(categories, filteredProducts);
         }
 
         function copyOrder(name, code, price) {
@@ -127,7 +135,6 @@
     </header>
 
     <main class="max-w-6xl mx-auto px-4 py-10">
-        <!-- Top Info & Instant Search Bar -->
         <div class="bg-white border-l-4 bavin-border p-6 rounded-r-lg shadow-sm mb-10 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
                 <h2 class="text-lg font-semibold text-slate-900 no-select">Curated Stock Selection for Retailers</h2>
@@ -138,13 +145,9 @@
             </div>
         </div>
 
-        <!-- Dynamic Catalogue Sections Container -->
-        <div id="catalogue-container">
-            <!-- Dynamically injected sections -->
-        </div>
+        <div id="catalogue-container"></div>
     </main>
 
-    <!-- Full-Screen Image Lightbox Modal -->
     <div id="image-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4" onclick="closeModal()">
         <div class="bg-white rounded-xl max-w-2xl w-full p-4 relative shadow-2xl" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-3 border-b pb-2">

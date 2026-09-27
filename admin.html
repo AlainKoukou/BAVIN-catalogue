@@ -5,7 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BAVIN Catalogue - Management Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .bavin-green { color: #84cc16; }
+        .bavin-bg { background-color: #84cc16; }
+        .bavin-border { border-color: #84cc16; }
+    </style>
     <script>
+        const SUPABASE_URL = 'https://purnvsxcqfnyrktgemy.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_U2dD3xKCALLKk-rC3-fRxg_J3V6p6ZV';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         function checkPassword() {
             const pass = document.getElementById("admin-pass").value;
             if (pass === "bavin2026") {
@@ -18,45 +28,28 @@
             }
         }
 
-        function getCategories() {
-            let saved = localStorage.getItem("bavin_categories");
-            if (saved) {
-                return JSON.parse(saved);
-            }
-            return ["Audio & Wireless Headsets", "Power Banks & Chargers"];
+        async function getCategories() {
+            let { data, error } = await supabase.from('categories').select('name');
+            if (error || !data) return ["Audio & Wireless Headsets", "Power Banks & Chargers"];
+            return data.map(c => c.name);
         }
 
-        function getProducts() {
-            let saved = localStorage.getItem("bavin_products");
-            if (saved) {
-                return JSON.parse(saved);
-            }
-            return [
-                { id: 1, name: "BAVIN BH-50", category: "Audio & Wireless Headsets", price: "15.00", code: "BH-50", desc: "Wireless Stereo Headphone, Bluetooth 5.3", img: "" }
-            ];
-        }
-
-        function loadCategories() {
-            let categories = getCategories();
-            
-            // Populate Category Manager List
+        async function loadCategories() {
+            let categories = await getCategories();
             let catList = document.getElementById("category-management-list");
             catList.innerHTML = "";
-            categories.forEach((cat, index) => {
+            categories.forEach((cat) => {
                 catList.innerHTML += `
                     <div class="flex justify-between items-center bg-white p-2.5 border rounded shadow-sm">
                         <span class="text-sm font-semibold text-slate-700">${cat}</span>
-                        <button onclick="deleteCategory(${index})" class="text-xs bg-red-100 text-red-600 px-2.5 py-1 rounded font-bold hover:bg-red-200">Delete Section</button>
+                        <button onclick="deleteCategory('${cat}')" class="text-xs bg-red-100 text-red-600 px-2.5 py-1 rounded font-bold hover:bg-red-200">Delete Section</button>
                     </div>
                 `;
             });
-
-            // Populate Dropdowns in Add/Edit forms
-            updateCategoryDropdowns();
+            updateCategoryDropdowns(categories);
         }
 
-        function updateCategoryDropdowns() {
-            let categories = getCategories();
+        async function updateCategoryDropdowns(categories) {
             let newCatSelect = document.getElementById("new-category");
             if (newCatSelect) {
                 newCatSelect.innerHTML = "";
@@ -64,62 +57,50 @@
                     newCatSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
                 });
             }
-
-            let products = getProducts();
-            products.forEach((p, index) => {
-                let editSelect = document.getElementById(`cat-${index}`);
-                if (editSelect) {
-                    editSelect.innerHTML = "";
-                    categories.forEach(cat => {
-                        let selected = (p.category === cat) ? 'selected' : '';
-                        editSelect.innerHTML += `<option value="${cat}" ${selected}>${cat}</option>`;
-                    });
-                }
-            });
         }
 
-        function addCategory(event) {
+        async function addCategory(event) {
             event.preventDefault();
             let input = document.getElementById("new-category-name");
             let newCat = input.value.trim();
             if (!newCat) return;
 
-            let categories = getCategories();
-            if (categories.includes(newCat)) {
-                alert("This category already exists!");
+            let { error } = await supabase.from('categories').insert([{ name: newCat }]);
+            if (error) {
+                alert("Error adding section: " + error.message);
                 return;
             }
 
-            categories.push(newCat);
-            localStorage.setItem("bavin_categories", JSON.stringify(categories));
             input.value = "";
             loadCategories();
-            loadAdminProducts();
+            alert("Section added successfully to Supabase!");
         }
 
-        function deleteCategory(index) {
-            let categories = getCategories();
-            let catToDelete = categories[index];
-
-            // Check if any product uses this category
-            let products = getProducts();
-            let inUse = products.some(p => p.category === catToDelete);
-            if (inUse) {
-                alert("Cannot delete this section because products are currently assigned to it. Please reassign or delete those products first.");
+        async function deleteCategory(catName) {
+            let { data: products } = await supabase.from('products').select('*').eq('category', catName);
+            if (products && products.length > 0) {
+                alert("Cannot delete this section because products are currently assigned to it.");
                 return;
             }
 
-            if (confirm(`Are you sure you want to delete the section "${catToDelete}"?`)) {
-                categories.splice(index, 1);
-                localStorage.setItem("bavin_categories", JSON.stringify(categories));
+            if (confirm(`Are you sure you want to delete the section "${catName}"?`)) {
+                let { error } = await supabase.from('categories').delete().eq('name', catName);
+                if (error) {
+                    alert("Error deleting category");
+                    return;
+                }
                 loadCategories();
-                loadAdminProducts();
             }
         }
 
-        function loadAdminProducts() {
-            let products = getProducts();
-            let categories = getCategories();
+        async function loadAdminProducts() {
+            let categories = await getCategories();
+            let { data: products, error } = await supabase.from('products').select('*');
+            if (error) {
+                console.error(error);
+                return;
+            }
+
             let container = document.getElementById("admin-product-list");
             container.innerHTML = "";
 
@@ -131,53 +112,51 @@
                 });
 
                 container.innerHTML += `
-                    <div class="p-5 border rounded-lg bg-gray-50 space-y-3">
+                    <div class="p-5 border rounded-lg bg-gray-50 space-y-3" id="prod-box-${p.id || index}">
                         <div class="flex justify-between items-center">
-                            <span class="text-xs font-bold bg-slate-900 text-white px-2 py-0.5 rounded">Item #${index + 1}</span>
-                            <button onclick="deleteProduct(${index})" class="bg-red-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-red-700">Delete Item</button>
+                            <span class="text-xs font-bold bg-slate-900 text-white px-2 py-0.5 rounded">Item Code: ${p.code}</span>
+                            <button onclick="deleteProduct('${p.id}', '${p.name}')" class="bg-red-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-red-700">Delete Item</button>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-gray-600 mb-1">Product Name</label>
-                                <input type="text" id="name-${index}" value="${p.name}" class="w-full p-2 border rounded text-sm bg-white">
+                                <input type="text" id="name-${p.id}" value="${p.name}" class="w-full p-2 border rounded text-sm bg-white">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-gray-600 mb-1">Model Code</label>
-                                <input type="text" id="code-${index}" value="${p.code}" class="w-full p-2 border rounded text-sm bg-white">
+                                <input type="text" id="code-${p.id}" value="${p.code}" class="w-full p-2 border rounded text-sm bg-white">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-gray-600 mb-1">Category / Section</label>
-                                <select id="cat-${index}" class="w-full p-2 border rounded text-sm bg-white">
+                                <select id="cat-${p.id}" class="w-full p-2 border rounded text-sm bg-white">
                                     ${categoryOptions}
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-gray-600 mb-1">Wholesale Price ($)</label>
-                                <input type="text" id="price-${index}" value="${p.price}" class="w-full p-2 border rounded text-sm bg-white">
+                                <input type="text" id="price-${p.id}" value="${p.price}" class="w-full p-2 border rounded text-sm bg-white">
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-xs font-semibold text-gray-600 mb-1">Description</label>
-                                <input type="text" id="desc-${index}" value="${p.desc}" class="w-full p-2 border rounded text-sm bg-white">
+                                <input type="text" id="desc-${p.id}" value="${p.desc}" class="w-full p-2 border rounded text-sm bg-white">
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-xs font-semibold text-gray-600 mb-1">Cloudinary Image URL</label>
-                                <input type="text" id="img-${index}" value="${p.img || ''}" class="w-full p-2 border rounded text-sm bg-white">
+                                <input type="text" id="img-${p.id}" value="${p.img || ''}" class="w-full p-2 border rounded text-sm bg-white">
                             </div>
                         </div>
                         <div class="text-right pt-2">
-                            <button onclick="updateProduct(${index})" class="bg-blue-600 text-white px-4 py-2 rounded text-xs font-bold hover:bg-blue-700">Save Changes</button>
+                            <button onclick="updateProduct('${p.id}')" class="bg-blue-600 text-white px-4 py-2 rounded text-xs font-bold hover:bg-blue-700">Save Changes to Cloud</button>
                         </div>
                     </div>
                 `;
             });
         }
 
-        function addProduct(event) {
+        async function addProduct(event) {
             event.preventDefault();
-            let products = getProducts();
             
             let newProduct = {
-                id: Date.now(),
                 name: document.getElementById("new-name").value,
                 code: document.getElementById("new-code").value,
                 category: document.getElementById("new-category").value,
@@ -186,92 +165,89 @@
                 img: document.getElementById("new-img").value
             };
 
-            products.push(newProduct);
-            localStorage.setItem("bavin_products", JSON.stringify(products));
+            let { error } = await supabase.from('products').insert([newProduct]);
+            if (error) {
+                alert("Error adding product: " + error.message);
+                return;
+            }
             
             document.getElementById("add-product-form").reset();
             loadAdminProducts();
-            alert("Product added successfully!");
+            alert("Product successfully added to Supabase cloud!");
         }
 
-        function updateProduct(index) {
-            let products = getProducts();
-            products[index].name = document.getElementById(`name-${index}`).value;
-            products[index].code = document.getElementById(`code-${index}`).value;
-            products[index].category = document.getElementById(`cat-${index}`).value;
-            products[index].price = document.getElementById(`price-${index}`).value;
-            products[index].desc = document.getElementById(`desc-${index}`).value;
-            products[index].img = document.getElementById(`img-${index}`).value;
+        async function updateProduct(id) {
+            let updatedData = {
+                name: document.getElementById(`name-${id}`).value,
+                code: document.getElementById(`code-${id}`).value,
+                category: document.getElementById(`cat-${id}`).value,
+                price: document.getElementById(`price-${id}`).value,
+                desc: document.getElementById(`desc-${id}`).value,
+                img: document.getElementById(`img-${id}`).value
+            };
 
-            localStorage.setItem("bavin_products", JSON.stringify(products));
+            let { error } = await supabase.from('products').update(updatedData).eq('id', id);
+            if (error) {
+                alert("Error updating product: " + error.message);
+                return;
+            }
+            alert("Product updated in cloud successfully!");
             loadAdminProducts();
-            alert("Product updated successfully!");
         }
 
-        function deleteProduct(index) {
-            if (confirm("Are you sure you want to delete this product?")) {
-                let products = getProducts();
-                products.splice(index, 1);
-                localStorage.setItem("bavin_products", JSON.stringify(products));
+        async function deleteProduct(id, name) {
+            if (confirm(`Are you sure you want to delete ${name}?`)) {
+                let { error } = await supabase.from('products').delete().eq('id', id);
+                if (error) {
+                    alert("Error deleting product");
+                    return;
+                }
                 loadAdminProducts();
             }
         }
     </script>
 </head>
 <body class="bg-slate-100 min-h-screen">
-    <!-- Password Login Screen -->
     <div id="login-screen" class="max-w-md mx-auto mt-24 p-8 bg-white rounded-xl shadow-lg text-center">
         <h2 class="text-2xl font-bold mb-4 text-slate-900">Admin Authentication</h2>
-        <p class="text-sm text-gray-500 mb-6">Enter your security key to access BAVIN inventory management.</p>
+        <p class="text-sm text-gray-500 mb-6">Enter your security key to access BAVIN cloud management.</p>
         <input type="password" id="admin-pass" placeholder="Enter Admin Password" class="w-full p-3 border rounded mb-4 text-center">
         <button onclick="checkPassword()" class="w-full bg-slate-900 text-white p-3 rounded font-bold hover:bg-slate-800">Unlock Panel</button>
     </div>
 
-    <!-- Protected Admin Dashboard -->
     <div id="admin-content" class="hidden pb-12">
         <nav class="bg-slate-900 text-white p-4 shadow-md flex justify-between items-center">
-            <h1 class="text-lg font-bold">BAVIN Admin Control Panel</h1>
-            <a href="index.html" class="text-xs bg-emerald-600 px-3 py-1.5 rounded font-semibold">View Live Catalogue</a>
+            <h1 class="text-lg font-bold">BAVIN Admin Control Panel (Supabase Cloud)</h1>
+            <a href="index.html" class="text-xs bavin-bg text-slate-900 px-3 py-1.5 rounded font-bold">View Live Catalogue</a>
         </nav>
 
         <div class="max-w-4xl mx-auto mt-8 p-6 bg-white rounded-xl shadow-lg space-y-8">
-            
-            <!-- Category Management Section -->
             <div class="p-5 border rounded-lg bg-slate-50">
                 <h2 class="text-lg font-bold mb-3 text-slate-800">Manage Catalogue Sections / Categories</h2>
                 <form onsubmit="addCategory(event)" class="flex gap-2 mb-4">
                     <input type="text" id="new-category-name" placeholder="New Section Name (e.g., Car Mounts)" required class="flex-1 p-2.5 border rounded text-sm bg-white">
                     <button type="submit" class="bg-slate-900 text-white px-4 py-2.5 rounded font-bold text-sm hover:bg-slate-800">Add Section</button>
                 </form>
-                <div id="category-management-list" class="space-y-2">
-                    <!-- Dynamic categories list -->
-                </div>
+                <div id="category-management-list" class="space-y-2"></div>
             </div>
 
-            <!-- Add Product Section -->
             <div>
                 <h2 class="text-xl font-bold mb-4 text-slate-800">Add New BAVIN Product</h2>
                 <form id="add-product-form" onsubmit="addProduct(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6 border-b">
                     <input type="text" id="new-name" placeholder="Product Name (e.g., BAVIN BH-50)" required class="p-2.5 border rounded text-sm">
                     <input type="text" id="new-code" placeholder="Model Code (e.g., BH-50)" required class="p-2.5 border rounded text-sm">
-                    <select id="new-category" class="p-2.5 border rounded text-sm bg-white">
-                        <!-- Dynamic categories -->
-                    </select>
+                    <select id="new-category" class="p-2.5 border rounded text-sm bg-white"></select>
                     <input type="text" id="new-price" placeholder="Wholesale Price (e.g., 15.00)" required class="p-2.5 border rounded text-sm">
                     <input type="text" id="new-desc" placeholder="Short description features" required class="p-2.5 border rounded text-sm md:col-span-2">
                     <input type="text" id="new-img" placeholder="Cloudinary Image URL" class="p-2.5 border rounded text-sm md:col-span-2">
-                    <button type="submit" class="md:col-span-2 bg-emerald-600 text-white p-3 rounded font-bold text-sm hover:bg-emerald-700">Add Product to Catalogue</button>
+                    <button type="submit" class="md:col-span-2 bavin-bg text-slate-900 font-bold p-3 rounded text-sm hover:opacity-90">Add Product to Cloud Database</button>
                 </form>
             </div>
 
-            <!-- Edit Inventory Section -->
             <div>
-                <h2 class="text-xl font-bold mb-4 text-slate-800">Manage & Edit Existing Inventory</h2>
-                <div id="admin-product-list" class="space-y-6">
-                    <!-- Dynamically loaded items -->
-                </div>
+                <h2 class="text-xl font-bold mb-4 text-slate-800">Manage & Edit Cloud Inventory</h2>
+                <div id="admin-product-list" class="space-y-6"></div>
             </div>
-
         </div>
     </div>
 </body>
