@@ -14,7 +14,7 @@
     <script>
         const SUPABASE_URL = 'https://purnvsxcqfnyrktgemy.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_U2dD3xKCALLKk-rC3-fRxg_J3V6p6ZV';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function checkPassword() {
             const pass = document.getElementById("admin-pass").value;
@@ -29,7 +29,7 @@
         }
 
         async function getCategories() {
-            let { data, error } = await supabase.from('categories').select('name');
+            let { data, error } = await supabaseClient.from('categories').select('name');
             if (error || !data) return ["Audio & Wireless Headsets", "Power Banks & Chargers"];
             return data.map(c => c.name);
         }
@@ -65,7 +65,7 @@
             let newCat = input.value.trim();
             if (!newCat) return;
 
-            let { error } = await supabase.from('categories').insert([{ name: newCat }]);
+            let { error } = await supabaseClient.from('categories').insert([{ name: newCat }]);
             if (error) {
                 alert("Error adding section: " + error.message);
                 return;
@@ -77,14 +77,14 @@
         }
 
         async function deleteCategory(catName) {
-            let { data: products } = await supabase.from('products').select('*').eq('category', catName);
+            let { data: products } = await supabaseClient.from('products').select('*').eq('category', catName);
             if (products && products.length > 0) {
                 alert("Cannot delete this section because products are currently assigned to it.");
                 return;
             }
 
             if (confirm(`Are you sure you want to delete the section "${catName}"?`)) {
-                let { error } = await supabase.from('categories').delete().eq('name', catName);
+                let { error } = await supabaseClient.from('categories').delete().eq('name', catName);
                 if (error) {
                     alert("Error deleting category");
                     return;
@@ -95,7 +95,7 @@
 
         async function loadAdminProducts() {
             let categories = await getCategories();
-            let { data: products, error } = await supabase.from('products').select('*');
+            let { data: products, error } = await supabaseClient.from('products').select('*');
             if (error) {
                 console.error(error);
                 return;
@@ -165,7 +165,7 @@
                 img: document.getElementById("new-img").value
             };
 
-            let { error } = await supabase.from('products').insert([newProduct]);
+            let { error } = await supabaseClient.from('products').insert([newProduct]);
             if (error) {
                 alert("Error adding product: " + error.message);
                 return;
@@ -186,7 +186,7 @@
                 img: document.getElementById(`img-${id}`).value
             };
 
-            let { error } = await supabase.from('products').update(updatedData).eq('id', id);
+            let { error } = await supabaseClient.from('products').update(updatedData).eq('id', id);
             if (error) {
                 alert("Error updating product: " + error.message);
                 return;
@@ -197,7 +197,7 @@
 
         async function deleteProduct(id, name) {
             if (confirm(`Are you sure you want to delete ${name}?`)) {
-                let { error } = await supabase.from('products').delete().eq('id', id);
+                let { error } = await supabaseClient.from('products').delete().eq('id', id);
                 if (error) {
                     alert("Error deleting product");
                     return;
