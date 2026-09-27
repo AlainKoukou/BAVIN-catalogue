@@ -5,51 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BAVIN Wholesale Catalogue - Lebanon</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Prevents text highlighting across the catalogue for a native app feel */
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+    </style>
     <script>
-        function renderCatalogue() {
+        let allProducts = [];
+
+        function initCatalogue() {
             let savedCategories = localStorage.getItem("bavin_categories");
             let categories = savedCategories ? JSON.parse(savedCategories) : ["Audio & Wireless Headsets", "Power Banks & Chargers"];
 
             let savedProducts = localStorage.getItem("bavin_products");
-            let products = savedProducts ? JSON.parse(savedProducts) : [
+            allProducts = savedProducts ? JSON.parse(savedProducts) : [
                 { id: 1, name: "BAVIN BH-50", category: "Audio & Wireless Headsets", price: "15.00", code: "BH-50", desc: "Wireless Stereo Headphone, Bluetooth 5.3", img: "" }
             ];
 
+            renderCategories(categories, allProducts);
+        }
+
+        function renderCategories(categories, productsToRender) {
             let catalogueContainer = document.getElementById("catalogue-container");
             catalogueContainer.innerHTML = "";
 
             categories.forEach(cat => {
-                let catProducts = products.filter(p => p.category === cat);
+                let catProducts = productsToRender.filter(p => p.category === cat);
+                if (catProducts.length === 0) return; // Skip empty categories during search filter
 
-                // Build section even if empty, or only if it has products. Let's build all active categories:
                 let cardsHTML = "";
-                if (catProducts.length === 0) {
-                    cardsHTML = `<div class="col-span-3 text-gray-400 text-sm italic py-4">No products in this section yet.</div>`;
-                } else {
-                    catProducts.forEach(p => {
-                        cardsHTML += `
-                            <div class="bg-white border rounded-xl p-5 shadow-sm flex flex-col justify-between">
-                                <div>
-                                    <span class="text-xs font-bold bg-slate-900 text-white px-2.5 py-1 rounded">${p.code}</span>
-                                    <div class="h-40 bg-gray-100 rounded-lg my-4 flex items-center justify-center text-gray-400 text-sm overflow-hidden cursor-pointer relative group" onclick="openModal('${p.img}', '${p.name}')">
-                                        ${p.img ? `<img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover transition transform group-hover:scale-105">` : `<span>${p.name} Preview</span>`}
-                                        <div class="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold uppercase tracking-wider">Click to Zoom</div>
-                                    </div>
-                                    <h4 class="font-bold text-lg text-slate-900">${p.name}</h4>
-                                    <p class="text-xs text-gray-500 mt-1">${p.desc}</p>
+                catProducts.forEach(p => {
+                    cardsHTML += `
+                        <div class="bg-white border rounded-xl p-5 shadow-sm flex flex-col justify-between transition hover:shadow-md">
+                            <div>
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="text-xs font-bold bg-slate-900 text-white px-2.5 py-1 rounded no-select">${p.code}</span>
+                                    <button onclick="copyOrder('${p.name}', '${p.code}', '${p.price}')" class="text-xs text-gray-400 hover:text-emerald-600 font-semibold transition" title="Copy item info for WhatsApp order">📋 Copy Order</button>
                                 </div>
-                                <div class="mt-4 pt-4 border-t flex justify-between items-center">
-                                    <span class="text-xs text-gray-400 uppercase font-semibold">Wholesale Price</span>
-                                    <span class="text-emerald-600 font-bold text-lg">$${p.price}</span>
+                                <div class="h-44 bg-gray-100 rounded-lg my-3 flex items-center justify-center text-gray-400 text-sm overflow-hidden cursor-pointer relative group" onclick="openModal('${p.img}', '${p.name}')">
+                                    ${p.img ? `<img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover transition transform group-hover:scale-105">` : `<span class="no-select">No Image Preview</span>`}
+                                    <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold uppercase tracking-wider no-select">Click to Zoom</div>
                                 </div>
+                                <h4 class="font-bold text-lg text-slate-900 no-select">${p.name}</h4>
+                                <p class="text-xs text-gray-500 mt-1 no-select">${p.desc}</p>
                             </div>
-                        `;
-                    });
-                }
+                            <div class="mt-5 pt-4 border-t flex justify-between items-center">
+                                <span class="text-xs text-gray-400 uppercase font-semibold no-select">Wholesale Price</span>
+                                <span class="text-emerald-600 font-extrabold text-xl no-select">$${p.price}</span>
+                            </div>
+                        </div>
+                    `;
+                });
 
                 catalogueContainer.innerHTML += `
                     <section class="mb-12">
-                        <h3 class="text-xl font-bold text-slate-900 border-b border-gray-200 pb-2 mb-6 flex items-center">
+                        <h3 class="text-xl font-bold text-slate-900 border-b border-gray-200 pb-2 mb-6 flex items-center no-select">
                             <span class="w-3 h-3 bg-emerald-500 rounded-full mr-2"></span> ${cat}
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -57,6 +71,25 @@
                         </div>
                     </section>
                 `;
+            });
+        }
+
+        function filterProducts() {
+            let query = document.getElementById("search-input").value.toLowerCase();
+            let filtered = allProducts.filter(p => 
+                p.name.toLowerCase().includes(query) || 
+                p.code.toLowerCase().includes(query) || 
+                p.desc.toLowerCase().includes(query)
+            );
+            let savedCategories = localStorage.getItem("bavin_categories");
+            let categories = savedCategories ? JSON.parse(savedCategories) : ["Audio & Wireless Headsets", "Power Banks & Chargers"];
+            renderCategories(categories, filtered);
+        }
+
+        function copyOrder(name, code, price) {
+            let text = `Hello, I would like to order:\n• ${name} (${code}) - Wholesale: $${price}`;
+            navigator.clipboard.writeText(text).then(() => {
+                alert(`Copied order info for ${code} to clipboard!`);
             });
         }
 
@@ -71,27 +104,34 @@
             document.getElementById("image-modal").classList.add("hidden");
         }
 
-        window.onload = renderCatalogue;
+        window.onload = initCatalogue;
     </script>
 </head>
 <body class="bg-gray-50 text-slate-800">
+    <!-- Header with Clickable Reset Brand Button -->
     <header class="bg-slate-900 text-white py-6 px-8 shadow-md border-b-4 border-emerald-500">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">
-            <div>
-                <h1 class="text-3xl font-extrabold tracking-wider text-emerald-400">BAVIN</h1>
-                <p class="text-sm text-gray-400 uppercase tracking-widest mt-1">Official Wholesale & Distribution Catalogue • Lebanon</p>
-            </div>
+            <button onclick="window.location.reload();" class="text-left focus:outline-none group cursor-pointer">
+                <h1 class="text-3xl font-extrabold tracking-wider text-emerald-400 group-hover:text-emerald-300 transition no-select">BAVIN</h1>
+                <p class="text-sm text-gray-400 uppercase tracking-widest mt-1 no-select">Official Wholesale & Distribution Catalogue • Lebanon</p>
+            </button>
             <div class="mt-4 md:mt-0 flex items-center space-x-4">
-                <span class="bg-emerald-500 text-slate-900 text-xs font-bold px-3 py-1 rounded-full uppercase">Direct B2B Pricing</span>
-                <a href="admin.html" class="text-xs text-gray-400 hover:text-white underline">Admin Login</a>
+                <span class="bg-emerald-500 text-slate-900 text-xs font-bold px-3 py-1 rounded-full uppercase no-select">Direct B2B Pricing</span>
+                <a href="admin.html" class="text-xs text-gray-400 hover:text-white underline no-select">Admin Login</a>
             </div>
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto px-4 py-12">
-        <div class="bg-white border-l-4 border-emerald-500 p-6 rounded-r-lg shadow-sm mb-12">
-            <h2 class="text-lg font-semibold text-slate-900">Curated Stock Selection for Retailers</h2>
-            <p class="text-sm text-gray-600 mt-1">Ready-to-sell, premium-packaged BAVIN mobile accessories with high consumer demand across Lebanese stores.</p>
+    <main class="max-w-6xl mx-auto px-4 py-10">
+        <!-- Top Info & Instant Search Bar -->
+        <div class="bg-white border-l-4 border-emerald-500 p-6 rounded-r-lg shadow-sm mb-10 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h2 class="text-lg font-semibold text-slate-900 no-select">Curated Stock Selection for Retailers</h2>
+                <p class="text-sm text-gray-600 mt-1 no-select">Ready-to-sell, premium-packaged BAVIN mobile accessories with high consumer demand across Lebanese stores.</p>
+            </div>
+            <div class="w-full md:w-72">
+                <input type="text" id="search-input" onkeyup="filterProducts()" placeholder="🔍 Search model or product..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
         </div>
 
         <!-- Dynamic Catalogue Sections Container -->
@@ -104,7 +144,7 @@
     <div id="image-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4" onclick="closeModal()">
         <div class="bg-white rounded-xl max-w-2xl w-full p-4 relative shadow-2xl" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-3 border-b pb-2">
-                <h3 id="modal-title" class="font-bold text-slate-900 text-lg">Product Preview</h3>
+                <h3 id="modal-title" class="font-bold text-slate-900 text-lg no-select">Product Preview</h3>
                 <button onclick="closeModal()" class="text-gray-500 hover:text-black font-bold text-xl px-2">&times;</button>
             </div>
             <div class="flex justify-center bg-gray-100 rounded-lg overflow-hidden max-h-[75vh]">
