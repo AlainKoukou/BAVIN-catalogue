@@ -12,6 +12,12 @@
             -moz-user-select: none;
             -ms-user-select: none;
         }
+        /* Official BAVIN Persian Green Theme (#00B488) */
+        .bavin-green { color: #00B488; }
+        .bavin-bg { background-color: #00B488; }
+        .bavin-border { border-color: #00B488; }
+        .bavin-hover:hover { color: #009672; }
+        .bavin-ring:focus { outline: none; box-shadow: 0 0 0 2px rgba(0, 180, 136, 0.4); border-color: #00B488; }
     </style>
     <script>
         let allProducts = [];
@@ -43,7 +49,7 @@
                             <div>
                                 <div class="flex justify-between items-start mb-2">
                                     <span class="text-xs font-bold bg-slate-900 text-white px-2.5 py-1 rounded no-select">${p.code}</span>
-                                    <button onclick="copyOrder('${p.name}', '${p.code}', '${p.price}')" class="text-xs text-gray-400 hover:text-emerald-600 font-semibold transition" title="Copy item info for WhatsApp order">📋 Copy Order</button>
+                                    <button onclick="copyOrder('${p.name}', '${p.code}', '${p.price}')" class="text-xs text-gray-400 bavin-hover font-semibold transition" title="Copy item info for WhatsApp order">📋 Copy Order</button>
                                 </div>
                                 <div class="h-44 bg-gray-100 rounded-lg my-3 flex items-center justify-center text-gray-400 text-sm overflow-hidden cursor-pointer relative group" onclick="openModal('${p.img}', '${p.name}')">
                                     ${p.img ? `<img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover transition transform group-hover:scale-105">` : `<span class="no-select">No Image Preview</span>`}
@@ -54,7 +60,7 @@
                             </div>
                             <div class="mt-5 pt-4 border-t flex justify-between items-center">
                                 <span class="text-xs text-gray-400 uppercase font-semibold no-select">Wholesale Price</span>
-                                <span class="text-emerald-600 font-extrabold text-xl no-select">$${p.price}</span>
+                                <span class="bavin-green font-extrabold text-xl no-select">$${p.price}</span>
                             </div>
                         </div>
                     `;
@@ -63,7 +69,7 @@
                 catalogueContainer.innerHTML += `
                     <section class="mb-12">
                         <h3 class="text-xl font-bold text-slate-900 border-b border-gray-200 pb-2 mb-6 flex items-center no-select">
-                            <span class="w-3 h-3 bg-emerald-500 rounded-full mr-2"></span> ${cat}
+                            <span class="w-3 h-3 bavin-bg rounded-full mr-2"></span> ${cat}
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             ${cardsHTML}
@@ -107,15 +113,15 @@
     </script>
 </head>
 <body class="bg-gray-50 text-slate-800">
-    <!-- Header with Official BAVIN Green Theme -->
-    <header class="bg-slate-900 text-white py-6 px-8 shadow-md border-b-4 border-emerald-500">
+    <!-- Header with #00B488 Theme -->
+    <header class="bg-slate-900 text-white py-6 px-8 shadow-md border-b-4 bavin-border">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">
             <button onclick="window.location.reload();" class="text-left focus:outline-none group cursor-pointer">
-                <h1 class="text-3xl font-extrabold tracking-wider text-emerald-400 group-hover:text-emerald-300 transition no-select">BAVIN</h1>
+                <h1 class="text-3xl font-extrabold tracking-wider bavin-green transition no-select">BAVIN</h1>
                 <p class="text-sm text-gray-400 uppercase tracking-widest mt-1 no-select">Official Wholesale & Distribution Catalogue • Lebanon</p>
             </button>
             <div class="mt-4 md:mt-0 flex items-center space-x-4">
-                <span class="bg-emerald-500 text-slate-900 text-xs font-bold px-3 py-1 rounded-full uppercase no-select">Direct B2B Pricing</span>
+                <span class="bavin-bg text-slate-900 text-xs font-bold px-3 py-1 rounded-full uppercase no-select">Direct B2B Pricing</span>
                 <a href="admin.html" class="text-xs text-gray-400 hover:text-white underline no-select">Admin Login</a>
             </div>
         </div>
@@ -123,13 +129,13 @@
 
     <main class="max-w-6xl mx-auto px-4 py-10">
         <!-- Top Info & Instant Search Bar -->
-        <div class="bg-white border-l-4 border-emerald-500 p-6 rounded-r-lg shadow-sm mb-10 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="bg-white border-l-4 bavin-border p-6 rounded-r-lg shadow-sm mb-10 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
                 <h2 class="text-lg font-semibold text-slate-900 no-select">Curated Stock Selection for Retailers</h2>
                 <p class="text-sm text-gray-600 mt-1 no-select">Ready-to-sell, premium-packaged BAVIN mobile accessories with high consumer demand across Lebanese stores.</p>
             </div>
             <div class="w-full md:w-72">
-                <input type="text" id="search-input" onkeyup="filterProducts()" placeholder="🔍 Search model or product..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <input type="text" id="search-input" onkeyup="filterProducts()" placeholder="🔍 Search model or product..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white bavin-ring">
             </div>
         </div>
 
